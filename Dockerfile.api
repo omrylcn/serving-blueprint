@@ -1,0 +1,18 @@
+# Dockerfile.api
+FROM python:3.12-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-dev
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY ./src ./src
+COPY ./config ./config
+COPY .env .
+
+CMD uvicorn src.api.app:app --host ${API_HOST} --port ${API_PORT}
+
+#CMD ["uvicorn", "src.api.app:app", "--host", "${API_HOST}", "--port", "${API_PORT}"]
