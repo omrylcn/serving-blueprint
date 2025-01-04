@@ -1,0 +1,1 @@
+from src.core.config.main import settings
