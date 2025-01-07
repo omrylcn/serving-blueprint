@@ -1,8 +1,6 @@
 # Variables
 NETWORK_NAME := mlops_network
-TRAINING_COMPOSE := docker-compose.model-train.yaml
-REGISTRY_COMPOSE := docker-compose.model-registry.yaml
-API_COMPOSE := docker-compose.api.yaml
+API_COMPOSE := docker-compose.yaml
 
 # Default target
 .PHONY: all
@@ -15,45 +13,21 @@ network:
 
 # Start all services
 .PHONY: start
-start: network start-registry start-training start-api
+start: network start-api
 
 
 # Stop all services
 .PHONY: stop
-stop: stop-training stop-registry stop-api
+stop: stop-api
 
 
-# Start registry services
-.PHONY: start-registry
-start-registry:
-	docker compose -f mlops/$(REGISTRY_COMPOSE) up -d
-
-# Stop registry services
-.PHONY: stop-registry
-stop-registry:
-	docker compose -f mlops/$(REGISTRY_COMPOSE) down
-
-
-# Start training services
-.PHONY: start-training
-start-training:
-	docker compose -f mlops/$(TRAINING_COMPOSE) up -d
-
-
-# Stop training services
-.PHONY: stop-training
-stop-training:
-	docker compose -f mlops/$(TRAINING_COMPOSE) down
-
-
-
-# Start training services
+# Start services
 .PHONY: start-api
 start-api:
 	docker compose -f mlops/$(API_COMPOSE) up -d
 
 
-# Stop training services
+# Stop services
 .PHONY: stop-api
 stop-api:
 	docker compose -f mlops/$(API_COMPOSE) down
@@ -68,15 +42,11 @@ clean-everything: stop
 # Show logs
 .PHONY: logs
 logs: # Show all services logs
-	docker compose -f $(TRAINING_COMPOSE) logs -f & \
-	docker compose -f $(REGISTRY_COMPOSE) logs -f & \
 	docker compose -f $(API_COMPOSE) logs -f
 
 # Build images
 .PHONY: build
 build: ## Build all serrvices
-	docker compose -f $(TRAINING_COMPOSE) build
-	docker compose -f $(REGISTRY_COMPOSE) build
 	docker compose -f $(API_COMPOSE) build
 
 
