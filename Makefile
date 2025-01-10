@@ -2,40 +2,40 @@
 NETWORK_NAME := mlops_network
 API_COMPOSE := docker-compose.yaml
 
-# Default target
+# # Default target
 .PHONY: all
-all: network start
+all:help
 
 # Create shared network
 .PHONY: network
-network:
+network: ## Create shared network
 	docker network create $(NETWORK_NAME) 2>/dev/null || true
 
 # Start all services
 .PHONY: start
-start: network start-api
+start: network start-api ## Start all services
 
 
 # Stop all services
 .PHONY: stop
-stop: stop-api
+stop: stop-api ## Stop all services
 
 
 # Start services
 .PHONY: start-api
-start-api:
-	docker compose -f mlops/$(API_COMPOSE) up -d
+start-api:  ## Start all services
+	docker compose -f $(API_COMPOSE) up -d
 
 
 # Stop services
 .PHONY: stop-api
-stop-api:
-	docker compose -f mlops/$(API_COMPOSE) down
+stop-api: ## Stop all services
+	docker compose -f $(API_COMPOSE) down
 
 
 # Clean everything
 .PHONY: clean-services
-clean-everything: stop
+clean-everything: stop ## Clean everything
 	docker network rm $(NETWORK_NAME) 2>/dev/null || true
 	docker volume prune -f
 
@@ -56,11 +56,11 @@ clean-file:  ## Remove the virtual environment and cached files
 	find . -type f -name "*.pyc" -delete
 
 .PHONY: format
-format:
+format: ## Format the project using ruff
 	uvx ruff format .
 
 .PHONY: lint	
-lint:
+lint: ## Lint the project using ruff
 	uvx ruff check .
 
 

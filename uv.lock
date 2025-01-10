@@ -37,35 +37,6 @@ wheels = [
 ]
 
 [[package]]
-name = "api-que-model-as-service"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "celery" },
-    { name = "fastapi" },
-    { name = "onnx" },
-    { name = "onnxruntime" },
-    { name = "pillow" },
-    { name = "pydantic-settings", extra = ["yaml"] },
-    { name = "python-multipart" },
-    { name = "redis" },
-    { name = "uvicorn" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "celery", specifier = ">=5.4.0" },
-    { name = "fastapi", specifier = ">=0.115.6" },
-    { name = "onnx", specifier = ">=1.17.0" },
-    { name = "onnxruntime", specifier = ">=1.20.1" },
-    { name = "pillow", specifier = ">=11.0.0" },
-    { name = "pydantic-settings", extras = ["yaml"], specifier = ">=2.7.0" },
-    { name = "python-multipart", specifier = ">=0.0.20" },
-    { name = "redis", specifier = ">=5.2.1" },
-    { name = "uvicorn", specifier = ">=0.34.0" },
-]
-
-[[package]]
 name = "async-timeout"
 version = "5.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -241,6 +212,37 @@ wheels = [
 ]
 
 [[package]]
+name = "ml-model-serving"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "celery" },
+    { name = "fastapi" },
+    { name = "onnx" },
+    { name = "onnxruntime" },
+    { name = "pillow" },
+    { name = "prometheus-fastapi-instrumentator" },
+    { name = "pydantic-settings", extra = ["yaml"] },
+    { name = "python-multipart" },
+    { name = "redis" },
+    { name = "uvicorn" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "celery", specifier = ">=5.4.0" },
+    { name = "fastapi", specifier = ">=0.115.6" },
+    { name = "onnx", specifier = ">=1.17.0" },
+    { name = "onnxruntime", specifier = ">=1.20.1" },
+    { name = "pillow", specifier = ">=11.0.0" },
+    { name = "prometheus-fastapi-instrumentator", specifier = ">=7.0.0" },
+    { name = "pydantic-settings", extras = ["yaml"], specifier = ">=2.7.0" },
+    { name = "python-multipart", specifier = ">=0.0.20" },
+    { name = "redis", specifier = ">=5.2.1" },
+    { name = "uvicorn", specifier = ">=0.34.0" },
+]
+
+[[package]]
 name = "mpmath"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -406,6 +408,28 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d6/b9/fb620dd47fc7cc9678af8f8bd8c772034ca4977237049287e99dda360b66/pillow-11.0.0-cp313-cp313t-win32.whl", hash = "sha256:607bbe123c74e272e381a8d1957083a9463401f7bd01287f50521ecb05a313f8", size = 2253197 },
     { url = "https://files.pythonhosted.org/packages/df/86/25dde85c06c89d7fc5db17940f07aae0a56ac69aa9ccb5eb0f09798862a8/pillow-11.0.0-cp313-cp313t-win_amd64.whl", hash = "sha256:5c39ed17edea3bc69c743a8dd3e9853b7509625c2462532e62baa0732163a904", size = 2572169 },
     { url = "https://files.pythonhosted.org/packages/51/85/9c33f2517add612e17f3381aee7c4072779130c634921a756c97bc29fb49/pillow-11.0.0-cp313-cp313t-win_arm64.whl", hash = "sha256:75acbbeb05b86bc53cbe7b7e6fe00fbcf82ad7c684b3ad82e3d711da9ba287d3", size = 2256828 },
+]
+
+[[package]]
+name = "prometheus-client"
+version = "0.21.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/62/14/7d0f567991f3a9af8d1cd4f619040c93b68f09a02b6d0b6ab1b2d1ded5fe/prometheus_client-0.21.1.tar.gz", hash = "sha256:252505a722ac04b0456be05c05f75f45d760c2911ffc45f2a06bcaed9f3ae3fb", size = 78551 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ff/c2/ab7d37426c179ceb9aeb109a85cda8948bb269b7561a0be870cc656eefe4/prometheus_client-0.21.1-py3-none-any.whl", hash = "sha256:594b45c410d6f4f8888940fe80b5cc2521b305a1fafe1c58609ef715a001f301", size = 54682 },
+]
+
+[[package]]
+name = "prometheus-fastapi-instrumentator"
+version = "7.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "prometheus-client" },
+    { name = "starlette" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0e/42/eeb55ea9b0eae7d6854bef6aef3ecd34674f85813bc3877efdaeb582ab7e/prometheus_fastapi_instrumentator-7.0.0.tar.gz", hash = "sha256:5ba67c9212719f244ad7942d75ded80693b26331ee5dfc1e7571e4794a9ccbed", size = 20077 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/59/66/2e93a8f56adb51ede41d0ef5f4f0277522acc4adc87937f5457b7b5692a8/prometheus_fastapi_instrumentator-7.0.0-py3-none-any.whl", hash = "sha256:96030c43c776ee938a3dae58485ec24caed7e05bfc60fe067161e0d5b5757052", size = 19005 },
 ]
 
 [[package]]

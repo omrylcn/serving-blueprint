@@ -56,7 +56,7 @@ def create_worker_side_tasks(model_instance: Dict[str, any], settings):
 
 
 # for one worker and container
-def create_worker_task(settings, model_name, model_no, model_instance):
+def create_worker_task(settings, model_name, model_instance):
     celery_app = Celery("model_tasks", broker=settings.RABBITMQ_URL, backend=settings.REDIS_URL)
 
     @celery_app.task(name=f"task_{model_name}", queue=f"task_{model_name}_queue")
