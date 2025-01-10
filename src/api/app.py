@@ -1,13 +1,27 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import Response, HTMLResponse
+from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_client import Counter, Histogram
 from celery.result import AsyncResult
 
 # from src.workers.celery_app import process_image_task
 from src.core.config.main import settings
 from src.api.route import st_router
+from src.monitoring.instrumentator import setup_monitoring
+
+
+# Create custom metrics
+RESULT_COUNTER = Counter(
+    name="style_transfer_result_total",
+    documentation="Total number of style transfer results",
+    labelnames=["status"],
+)
+
+
 
 
 app = FastAPI(title=settings.PROJECT_NAME, version=settings.PROJECT_VERSION)
+setup_monitoring(app)
 app.include_router(st_router, prefix="/api/v1", tags=["Style Transfer"])
 
 
@@ -51,30 +65,9 @@ async def get_result(task_id: str):
         return {"error": "Task still processing"}
 
     if result.successful():
+        RESULT_COUNTER.labels("success").inc()
         return Response(content=result.get(), media_type="image/png")
+    
+    RESULT_COUNTER.labels("failed").inc()
     return {"error": "Task failed"}
 
-
-# @app.post("/process-image/")
-# async def process_image_endpoint(
-#     params: ImageProcessingParams,
-#     file: UploadFile = File(...),
-# ):
-
-#     check_task_mode(params.model_mode, task_lib)
-#     result = task_lib[params.model_mode].delay()
-#     print(result)
-#     # content = await file.read()
-#     # task = process_image_task.delay(content, (image_size, image_size))
-#     return {params.model_name, params.model_mode}
-
-
-# @app.post("/process-image/")
-# async def process_image_endpoint(
-#     params: ImageProcessingParams,
-#     file: UploadFile = File(...),
-
-# ):
-#     #content = await file.read()
-#     #task = process_image_task.delay(content, (image_size, image_size))
-#     return {params.model_name, params.model_mode}
