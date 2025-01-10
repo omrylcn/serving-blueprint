@@ -13,7 +13,7 @@ ML_MODELS:
     udnie: 3
 
 
-REDIS_HOST: localhost
-RABBITMQ_HOST: localhost
+REDIS_HOST: redis
+RABBITMQ_HOST: rabbitmq
 
   
