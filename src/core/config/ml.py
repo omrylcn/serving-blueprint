@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union,Tuple
 from enum import Enum
 import yaml
 from functools import lru_cache
@@ -16,20 +16,22 @@ class ModelConfig(BaseModel):
     version: str
     framework: ModelFramework
     path: str
-    input_shape: List[int]
-    input_type: str = Field(default="float32")
-    device: str = Field(default="cpu")
-    batch_size: int = Field(default=1)
-    options: Dict[str, Union[str, int, float, bool]] = Field(default_factory=dict)
-    preprocessing: Optional[Dict[str, Dict]] = Field(default_factory=dict)
-    postprocessing: Optional[Dict[str, Dict]] = Field(default_factory=dict)
+    model_id: str = Field(default="")
+    params: Dict[str, Union[str, int, float, bool,Tuple,List]] = Field(default_factory=dict)
+    # input_shape: List[int]
+    # input_type: str = Field(default="float32")
+    # device: str = Field(default="cpu")
+    # batch_size: int = Field(default=1)
+    # options: Dict[str, Union[str, int, float, bool]] = Field(default_factory=dict)
+    # preprocessing: Optional[Dict[str, Dict]] = Field(default_factory=dict)
+    # postprocessing: Optional[Dict[str, Dict]] = Field(default_factory=dict)
 
 class MLSettings(BaseModel):
-    default_model: str
-    models: Dict[str, Dict[str, ModelConfig]]
-    cache_ttl: int = Field(default=3600)
-    max_batch_size: int = Field(default=32)
-    allowed_formats: List[str] = Field(default=["jpg", "png", "jpeg"])
+
+    models: dict[str, ModelConfig]
+#    cache_ttl: int = Field(default=3600)
+#    max_batch_size: int = Field(default=32)
+#    allowed_formats: List[str] = Field(default=["jpg", "png", "jpeg"])
 
     class Config:
         extra = "allow"

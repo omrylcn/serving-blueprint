@@ -40,6 +40,12 @@ class Settings(BaseSettings):
     REDIS_PORT: int = Field(default=6379)
     REDIS_DB: int = Field(default=0)
 
+    # Flower
+    FLOWER_PORT: int = Field(default=5555)
+    FLOWER_USER: str = Field(default="guest")
+    FLOWER_PASSWORD: str = Field(default="guest")
+
+
     # Logger Configuration
     LOG_LEVEL: str = Field(default="INFO")
     LOGGER_HANDLER: str = Field(default="file")
