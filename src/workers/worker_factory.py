@@ -2,6 +2,7 @@ import os
 from src.workers.style_transfer_workers import create_worker_task
 from src.core.config import settings
 from src.ml.style_transfer_service import ImageService
+from src.core.logging import logger
 
 
 model_key = os.getenv('MODEL_KEY', None)
@@ -24,5 +25,6 @@ except Exception as e:
 try:
     style_transfer_service = ImageService(model_path=model_path)
     worker_task, celery_app = create_worker_task(settings, model_name, style_transfer_service)
+    logger.info("Worker task and Celery app initialized successfully.")
 except Exception as e:
     raise Exception(f"Error initializing services: {str(e)}")
