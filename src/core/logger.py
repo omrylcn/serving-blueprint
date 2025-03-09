@@ -2,17 +2,17 @@ from abc import ABC, abstractmethod
 import logging
 from datetime import datetime
 from typing import Dict, Any, List
-from pymongo import MongoClient
+#from pymongo import MongoClient
 import os
 import json
 from threading import Lock
-from src.core.config import settings
+from src.core.config import configs
 
 
 def create_basic_logger():
     logger = logging.getLogger(__name__)
     handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter("%(levelname)s:     %(message)s"))
+    handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
 
@@ -25,9 +25,9 @@ logger = create_basic_logger()
 class BaseDBLogger(ABC):
 
     def __init__(self) -> None:
-        self.log_level = settings.LOG_LEVEL
-        self.log_format = settings.LOG_FORMAT
-        self.log_dir = settings.LOG_DIR
+        self.log_level = configs.LOG_LEVEL
+        self.log_format = configs.LOG_FORMAT
+        self.log_dir = configs.LOG_DIR
         self.logger = None
 
     def _setup_logger(self):
@@ -62,7 +62,7 @@ class BaseDBLogger(ABC):
 
 class MongoDBLogger(BaseDBLogger):
     def __init__(self, name: str, model_name: str, model_tag: str, *args, **kwargs):
-        self.client = MongoClient(settings.MONGODB_URL)
+        self.client = MongoClient(configs.MONGODB_URL)
 
         self.db = self.client[name]
         self.predictions_collection = self.db["predictions"]
@@ -151,7 +151,7 @@ class FileLogger(BaseDBLogger):
         self.name = name
         self.model_name = model_name
         self.model_tag = model_tag
-        self.log_dir = os.path.join(log_dir if log_dir else settings.LOG_DIR, name)
+        self.log_dir = os.path.join(log_dir if log_dir else configs.LOG_DIR, name)
 
         os.makedirs(self.log_dir, exist_ok=True)
 
@@ -221,7 +221,7 @@ class FileLogger(BaseDBLogger):
 
 class DBLogger:
     def __init__(self, logger: str, name: str, *args, **kwargs):
-        self.logger = logger if logger else settings.LOGGER_HANDLER
+        self.logger = logger if logger else configs.LOGGER_HANDLER
         self.db_logger = logger_dict[logger](name=name, *args, **kwargs)
 
     def log_operation(self, message: str, level: str = "info", **kwargs):
