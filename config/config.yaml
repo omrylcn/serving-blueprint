@@ -2,18 +2,30 @@ ML_CONFIG_PATH: config/ml_config.yaml
 
 # Available model types
 ML_MODEL_TYPES:
-  - style_transfer
+  - text_embedding
+  #- style_transfer
 
-# Style transfer models mapping
+# Style transfer models, key and id
 ML_MODELS:
-  style_transfer:
-    candy: 0
-    mosaic: 1
-    rain_princess: 2
-    udnie: 3
+  # text_embedding models, key and id
+  text_embedding:
+    10: small
+    11: base
+    #large: 12
 
+  # style_transfer:
+  #   candy: 0
+  #   mosaic: 1
+  #   rain_princess: 2
+  #   udnie: 3
+  
+  
+# Elasticsearch configuration for logging
+ELASTICSEARCH_HOST: localhost
+ELASTICSEARCH_PORT: 9200
+ELASTICSEARCH_USER: elastic
+ELASTICSEARCH_PASSWORD: changeme
+ELASTICSEARCH_VERIFY_CERTS: false
 
 REDIS_HOST: localhost
 RABBITMQ_HOST: localhost
-
-  
