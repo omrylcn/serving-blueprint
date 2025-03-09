@@ -17,6 +17,7 @@ class ModelConfig(BaseModel):
     framework: ModelFramework
     path: str
     model_id: str = Field(default="")
+    description: Optional[str] = Field(default="")
     params: Dict[str, Union[str, int, float, bool,Tuple,List]] = Field(default_factory=dict)
     # input_shape: List[int]
     # input_type: str = Field(default="float32")

@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict, PydanticBaseSettingsSource, YamlConfigSettingsSource
 from pydantic import Field
-from typing import Tuple, Type,List,Dict
+from typing import Tuple, Type, List, Dict
 import yaml
 from functools import lru_cache
 
@@ -8,26 +8,22 @@ from src.core.config.ml import MLSettings
 
 CONFIG_YAML_PATH = "config/config.yaml"
 
+MODEL_TYPES = ["text_embedding"]
+# STYLE_TRANSFER_MODELS = ["candy", "mosaic", "rain_princess", "udnie"]
 
-
-
-MODEL_TYPES = ["style_transfer"]
-
-STYLE_TRANSFER_MODELS = ["candy", "mosaic", "rain_princess", "udnie"]
-
-
-class Settings(BaseSettings):
-    # API Configuration
-    API_PORT: int = Field(default=8000)
-    API_HOST: str = Field(default="0.0.0.0")
+class APPConfigs(BaseSettings):
     PROJECT_NAME: str = Field(default="ML API")
     PROJECT_VERSION: str = Field(default="0.0.0")
+
+    # API Configuration<
+    API_PORT: int = Field(default=8000)
+    API_HOST: str = Field(default="0.0.0.0")
 
     # Model Configuration
     ML_CONFIG_PATH: str = Field(default="config/ml_config.yaml")
     ML_MODEL_TYPES: List[str] = Field(default=MODEL_TYPES)
-    ML_MODELS: Dict[str, Dict[str, int]] = Field(default={})
-    
+    ML_MODELS: Dict[str, Dict[int, str]] = Field(default={})
+
     RABBITMQ_USER: str = Field(default="guest")
     RABBITMQ_PASSWORD: str = Field(default="guest")
     RABBITMQ_HOST: str = Field(default="rabbitmq")
@@ -45,7 +41,6 @@ class Settings(BaseSettings):
     FLOWER_USER: str = Field(default="guest")
     FLOWER_PASSWORD: str = Field(default="guest")
 
-
     # Logger Configuration
     LOG_LEVEL: str = Field(default="INFO")
     LOGGER_HANDLER: str = Field(default="file")
@@ -56,12 +51,18 @@ class Settings(BaseSettings):
     MINIO_ACCESS_KEY: str = Field(default="minioadmin")
     MINIO_SECRET_KEY: str = Field(default="minioadmin")
 
-    # MongoDB Configuration
-    MONGODB_PORT: int = Field(default=27017)
-    MONGODB_ROOT_USERNAME: str = Field(default="root")
-    MONGODB_ROOT_PASSWORD: str = Field(default="root")
-    MONGODB_HOST: str = Field(default="localhost")
-    MONGODB_URL: str = Field(default="mongodb://root:example@localhost:27017")
+    # Elasticsearch Configuration
+    ELASTICSEARCH_HOST: str = Field(default="elasticsearch")
+    ELASTICSEARCH_PORT: int = Field(default=9200)
+    ELASTICSEARCH_USER: str = Field(default="elastic")
+    ELASTICSEARCH_PASSWORD: str = Field(default="changeme")
+    ELASTICSEARCH_VERIFY_CERTS: bool = Field(default=False)
+
+    # MONGODB_PORT: int = Field(default=27017)
+    # MONGODB_ROOT_USERNAME: str = Field(default="root")
+    # MONGODB_ROOT_PASSWORD: str = Field(default="root")
+    # MONGODB_HOST: str = Field(default="localhost")
+    # MONGODB_URL: str = Field(default="mongodb://root:example@localhost:27017")
 
     @property
     def RABBITMQ_URL(self) -> str:
@@ -71,9 +72,9 @@ class Settings(BaseSettings):
     def REDIS_URL(self) -> str:
         return f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
-    @property
-    def ml_settings(self) -> MLSettings:
-        return load_ml_settings(self.ML_CONFIG_PATH)
+    # @property
+    # def ml_settings(self) -> MLSettings:
+    #     return load_ml_co(self.ML_CONFIG_PATH)
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -100,18 +101,21 @@ class Settings(BaseSettings):
             file_secret_settings,
         )
 
+
 @lru_cache()
-def load_ml_settings(config_path: str) -> MLSettings:
-    """Load ML settings from yaml with caching"""
+def load_ml_config(config_path: str) -> MLSettings:
+    """Load ML configs from yaml with caching"""
     try:
-        with open(config_path, 'r') as f:
+        with open(config_path, "r") as f:
             config_data = yaml.safe_load(f)
         return MLSettings(**config_data)
     except Exception as e:
         raise ValueError(f"Error loading ML config from {config_path}: {str(e)}")
 
 
-settings = Settings()  # Explanation of configuration priority (highest to lowest):
+configs = APPConfigs()  # Explanation of configuration priority (highest to lowest):
+ml_configs = load_ml_config(configs.ML_CONFIG_PATH)
+
 # 1. Environment variables
 # 2. .env file
 # 3. YAML config file
