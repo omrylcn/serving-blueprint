@@ -65,8 +65,10 @@ async def create_embedding(
     # Send text to embedding task
     model_name = configs.ML_MODELS['text_embedding'][request.model_key]
     model_key = request.model_key
+
+    print(configs.model_dump())
     try:
-        result = text_embedding_worker_service.send_text_to_task(
+        result = text_embedding_worker_service.send_as_task(
             texts=[request.text],
             model_name=model_name
         )
@@ -80,6 +82,37 @@ async def create_embedding(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.get("/{task_id}")
+async def get_task_result(
+    task_id: str
+):
+    """
+    Get the result of a text embedding task.
+    """
+    try:
+        result = text_embedding_worker_service.get_task_result(task_id)
+        print(type(result))
+        print(result.keys())
+        return True
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving task result: {str(e)}")
+
+
+# @router.get("/ping")  
+# def get_rabbit_ping():
+#     import requests
+
+#     url =  "http://localhost:15672/"
+
+#     res = requests.get(url)
+#     print(configs.RABBITMQ_URL)
+
+#     if res.status_code == 200:
+#         return {"status": "OK"}
+#     else:
+#         return {"status": "ERROR"}
+    
 
 # @router.post("/batch", response_model=TextEmbeddingResponse)
 # async def create_batch_embedding(

@@ -1,7 +1,8 @@
-from typing import Callable,Dict
+from typing import Callable,Dict,Optional
 from celery import Celery
 from src.ml.text_embedding_service import TextEmbeddingService
 from src.core.config import APPConfigs,configs
+
 
 #from config import EmbeddingTaskConfig
 from typing import List, Dict, Any
@@ -17,12 +18,12 @@ class EmbeddingTaskConfig:
     def get_queue_name(model_name: str) -> str:
         return f"text_embedding_{model_name}_queue"
 
-def create_celery_app(configs:APPConfigs) -> Celery:
+def create_celery_app(configs:APPConfigs=configs) -> Celery:
     return Celery('embedding_tasks',broker=configs.RABBITMQ_URL, backend=configs.REDIS_URL)   
     
 
-def get_embedding_task_config(configs:APPConfigs) -> EmbeddingTaskConfig:
-    return EmbeddingTaskConfig(configs)
+# def get_embedding_task_config(configs:APPConfigs) -> EmbeddingTaskConfig:
+#     return EmbeddingTaskConfig(configs)
 
 
 class TextEmbeddingWorkerService:
@@ -43,7 +44,7 @@ class TextEmbeddingWorkerService:
         Celery application used to manage tasks.
     """
     
-    def __init__(self, celery_app: Celery = None):
+    def __init__(self, celery_app: Optional[Celery]= None):
         """
         Initializes the EmbeddingService class.
         
@@ -52,9 +53,9 @@ class TextEmbeddingWorkerService:
         celery_app : Celery, optional
             Celery application. If None, a new application is created.
         """
-        self.celery_app = celery_app if celery_app else create_celery_app()
-    
-    def send_text_to_task(self, texts: List[str], model_name: str) -> Dict[str, Any]:
+        self.celery_app = celery_app if celery_app is not None else create_celery_app()    
+        
+    def send_as_task(self, texts: List[str], model_name: str) -> Dict[str, Any]:
         """
         Sends texts to a worker for embedding processing.
         
