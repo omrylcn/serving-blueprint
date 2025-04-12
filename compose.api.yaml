@@ -1,0 +1,35 @@
+
+version: '3.8'
+name: api
+
+services:
+  # API Servisi
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8000:8000"
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=redis
+      - LOG_LEVEL=INFO
+      - API_PORT=${API_PORT}
+      - API_HOST=${API_HOST}
+
+    #   - rabbitmq
+    #   - redis
+    restart: always
+    # env_file:
+    #   - .env    
+  
+    volumes:
+       - ./src:/app/src
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 40s

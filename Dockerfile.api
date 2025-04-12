@@ -1,5 +1,5 @@
 # Dockerfile.api
-FROM python:3.12-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
@@ -9,8 +9,9 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY ./src ./src
-COPY ./config ./config
+COPY src /app/src
+COPY config /app/config
+COPY models /app/models
 COPY .env .
 
 CMD uvicorn src.api.app:app --host ${API_HOST} --port ${API_PORT}
