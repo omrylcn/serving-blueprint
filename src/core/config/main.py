@@ -11,68 +11,62 @@ CONFIG_YAML_PATH = "config/config.yaml"
 MODEL_TYPES = ["text_embedding"]
 # STYLE_TRANSFER_MODELS = ["candy", "mosaic", "rain_princess", "udnie"]
 
-class APPConfigs(BaseSettings):
-    PROJECT_NAME: str = Field(default="ML API")
-    PROJECT_VERSION: str = Field(default="0.0.0")
+class APPSettings(BaseSettings):
+    project_name: str = Field(default="ML API")
+    project_version: str = Field(default="0.0.0")
 
     # API Configuration<
-    API_PORT: int = Field(default=8000)
-    API_HOST: str = Field(default="0.0.0.0")
+    api_port: int = Field(default=8000)
+    api_host: str = Field(default="0.0.0.0")
 
     # Model Configuration
-    ML_CONFIG_PATH: str = Field(default="config/ml_config.yaml")
-    ML_MODEL_TYPES: List[str] = Field(default=MODEL_TYPES)
-    ML_MODELS: Dict[str, Dict[int, str]] = Field(default={})
+    ml_config_path: str = Field(default="config/ml_config.yaml")
+    ml_model_types: List[str] = Field(default=MODEL_TYPES)
+    ml_models: Dict[str, Dict[int, str]] = Field(default={})
 
-    RABBITMQ_USER: str = Field(default="guest")
-    RABBITMQ_PASSWORD: str = Field(default="guest")
-    RABBITMQ_HOST: str = Field(default="rabbitmq")
-    RABBITMQ_PORT: int = Field(default=5672)
-    RABBITMQ_MANAGEMENT_PORT: int = Field(default=15672)
+    rabbitmq_user: str = Field(default="guest")
+    rabbitmq_password: str = Field(default="guest")
+    rabbitmq_host: str = Field(default="rabbitmq")
+    rabbitmq_port: int = Field(default=5672)
+    rabbitmq_management_port: int = Field(default=15672)
 
     # Redis Configuration
-    REDIS_HOST: str = Field(default="redis")
-    REDIS_PASSWORD: str = Field(default="")
-    REDIS_PORT: int = Field(default=6379)
-    REDIS_DB: int = Field(default=0)
+    redis_host: str = Field(default="redis")
+    redis_password: str = Field(default="")
+    redis_port: int = Field(default=6379)
+    redis_db: int = Field(default=0)
 
     # Flower
-    FLOWER_PORT: int = Field(default=5555)
-    FLOWER_USER: str = Field(default="guest")
-    FLOWER_PASSWORD: str = Field(default="guest")
+    flower_port: int = Field(default=5555)
+    flower_user: str = Field(default="guest")
+    flower_password: str = Field(default="guest")
 
     # Logger Configuration
-    LOG_LEVEL: str = Field(default="INFO")
-    LOGGER_HANDLER: str = Field(default="file")
-    LOG_DIR: str = Field(default="logs")
+    log_level: str = Field(default="INFO")
+    logger_handler: str = Field(default="file")
+    log_dir: str = Field(default="logs")
+    logger_format: str = Field(default="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
     # MinIO Configuration
-    MINIO_ENDPOINT: str = Field(default="localhost")
-    MINIO_ACCESS_KEY: str = Field(default="minioadmin")
-    MINIO_SECRET_KEY: str = Field(default="minioadmin")
+    minio_endpoint: str = Field(default="localhost")
+    minio_access_key: str = Field(default="minioadmin")
+    minio_secret_key: str = Field(default="minioadmin")
 
     # Elasticsearch Configuration
-    ELASTICSEARCH_HOST: str = Field(default="elasticsearch")
-    ELASTICSEARCH_PORT: int = Field(default=9200)
-    ELASTICSEARCH_USER: str = Field(default="elastic")
-    ELASTICSEARCH_PASSWORD: str = Field(default="changeme")
-    ELASTICSEARCH_VERIFY_CERTS: bool = Field(default=False)
+    elasticsearch_host: str = Field(default="elasticsearch")
+    elasticsearch_port: int = Field(default=9200)
+    elasticsearch_user: str = Field(default="elastic")
+    elasticsearch_password: str = Field(default="changeme")
+    elasticsearch_verify_certs: bool = Field(default=False)
 
-    # MONGODB_PORT: int = Field(default=27017)
-    # MONGODB_ROOT_USERNAME: str = Field(default="root")
-    # MONGODB_ROOT_PASSWORD: str = Field(default="root")
-    # MONGODB_HOST: str = Field(default="localhost")
-    # MONGODB_URL: str = Field(default="mongodb://root:example@localhost:27017")
 
     @property
-    def RABBITMQ_URL(self) -> str:
-        return f"amqp://{self.RABBITMQ_USER}:{self.RABBITMQ_PASSWORD}@{self.RABBITMQ_HOST}:{self.RABBITMQ_PORT}//"
+    def rabbitmq_url(self) -> str:
+        return f"amqp://{self.rabbitmq_user}:{self.rabbitmq_password}@{self.rabbitmq_host}:{self.rabbitmq_port}//"
 
     @property
-    def REDIS_URL(self) -> str:
-        return f"redis://:{self.REDIS_PASSWORD}@{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
-
-    # @property
+    def redis_url(self) -> str:
+        return f"redis://:{self.redis_password}@{self.redis_host}:{self.redis_port}/{self.redis_db}"    # @property
     # def ml_settings(self) -> MLSettings:
     #     return load_ml_co(self.ML_CONFIG_PATH)
 
@@ -81,7 +75,7 @@ class APPConfigs(BaseSettings):
         env_file_encoding="utf-8",
         # extra="allow",
         yaml_file=CONFIG_YAML_PATH,
-        case_sensitive=True,
+        case_sensitive=False,
     )
 
     @classmethod
@@ -103,7 +97,7 @@ class APPConfigs(BaseSettings):
 
 
 @lru_cache()
-def load_ml_config(config_path: str) -> MLSettings:
+def load_ml_settings(config_path: str) -> MLSettings:
     """Load ML configs from yaml with caching"""
     try:
         with open(config_path, "r") as f:
@@ -113,8 +107,8 @@ def load_ml_config(config_path: str) -> MLSettings:
         raise ValueError(f"Error loading ML config from {config_path}: {str(e)}")
 
 
-configs = APPConfigs()  # Explanation of configuration priority (highest to lowest):
-ml_configs = load_ml_config(configs.ML_CONFIG_PATH)
+settings = APPSettings()  # Explanation of configuration priority (highest to lowest):
+ml_settings = load_ml_settings(settings.ml_config_path)
 
 # 1. Environment variables
 # 2. .env file

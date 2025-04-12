@@ -1,7 +1,7 @@
 from typing import Callable,Dict,Optional
 from celery import Celery
 from src.ml.text_embedding_service import TextEmbeddingService
-from src.core.config import APPConfigs,configs
+from src.core.config import APPSettings,settings
 
 
 #from config import EmbeddingTaskConfig
@@ -18,12 +18,12 @@ class EmbeddingTaskConfig:
     def get_queue_name(model_name: str) -> str:
         return f"text_embedding_{model_name}_queue"
 
-def create_celery_app(configs:APPConfigs=configs) -> Celery:
-    return Celery('embedding_tasks',broker=configs.RABBITMQ_URL, backend=configs.REDIS_URL)   
+def create_celery_app(settings:APPSettings=settings) -> Celery:
+    return Celery('embedding_tasks',broker=settings.rabbitmq_url, backend=settings.redis_url)   
     
 
-# def get_embedding_task_config(configs:APPConfigs) -> EmbeddingTaskConfig:
-#     return EmbeddingTaskConfig(configs)
+# def get_embedding_task_config(settings:APPsettings) -> EmbeddingTaskConfig:
+#     return EmbeddingTaskConfig(settings)
 
 
 class TextEmbeddingWorkerService:

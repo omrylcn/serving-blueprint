@@ -1,2 +1,2 @@
-from src.core.config.main import APPConfigs,configs,load_ml_config,ml_configs
+from src.core.config.main import APPSettings,settings,load_ml_settings,ml_settings
 from src.core.config.ml import MLSettings,ModelConfig

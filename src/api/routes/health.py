@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Response
 from fastapi.responses import HTMLResponse
 
-from src.core.config.main import configs
+from src.core.config.main import settings
 
 router = APIRouter()
 
@@ -13,8 +13,8 @@ def health_check():
     """
     return {
         "status": True,
-        "service": configs.PROJECT_NAME,
-        "version": configs.PROJECT_VERSION,
+        "service": settings.project_name,
+        "version": settings.project_version,
         
     }
 

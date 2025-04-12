@@ -1,12 +1,12 @@
-ML_CONFIG_PATH: config/ml_config.yaml
+ml_config_path: config/ml_config.yaml
 
-# Available model types
-ML_MODEL_TYPES:
+# available model types
+ml_model_types:
   - text_embedding
   #- style_transfer
 
-# Style transfer models, key and id
-ML_MODELS:
+# style transfer models, key and id
+ml_models:
   # text_embedding models, key and id
   text_embedding:
     10: small
@@ -20,12 +20,12 @@ ML_MODELS:
   #   udnie: 3
   
   
-# Elasticsearch configuration for logging
-ELASTICSEARCH_HOST: localhost
-ELASTICSEARCH_PORT: 9200
-ELASTICSEARCH_USER: elastic
-ELASTICSEARCH_PASSWORD: changeme
-ELASTICSEARCH_VERIFY_CERTS: false
+# elasticsearch configuration for logging
+elasticsearch_host: localhost
+elasticsearch_port: 9200
+elasticsearch_user: elastic
+elasticsearch_password: changeme
+elasticsearch_verify_certs: false
 
-REDIS_HOST: localhost
-RABBITMQ_HOST: localhost
+redis_host: localhost
+rabbitmq_host: localhost
