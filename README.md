@@ -1,27 +1,21 @@
-# Serving Blueprint
+# Text Embedding Service
 
-A production-ready ML model serving system that handles distributed inference workloads with comprehensive monitoring and analysis capabilities. This system is designed to serve machine learning models at scale while providing robust monitoring, logging, and analysis features.
+A scalable and production-ready system for serving text embedding models with distributed inference capabilities. This service processes text data through various embedding models while providing robust task management, monitoring, and logging features.
 
 ## Architecture Overview
 
-Our system implements a distributed architecture that separates concerns between model serving, task processing, and result analysis. Here's how the components work together:
-
-### Project Overview
+The system implements a distributed architecture that separates concerns between API handling, task queuing, and worker processing:
 
 ```mermaid
 graph TB
-    subgraph High Level Architecture
-        Client([Client]) --> API[FastAPI Service]
-        API --> Queue[RabbitMQ]
-        Queue --> Workers[Celery Workers]
-        Workers --> Redis[(Redis Cache)]
-        Workers --> ES[(Elasticsearch)]
-        
-        subgraph Monitoring
-            API & Workers --> Prometheus
-            ES --> Grafana
-            Prometheus --> Grafana
-        end
+    Client([Client]) --> API[FastAPI Service]
+    API --> Queue[RabbitMQ]
+    Queue --> Workers[Celery Workers]
+    Workers --> Redis[(Redis Result Backend)]
+    
+    subgraph Monitoring
+        API & Workers --> Prometheus
+        Prometheus --> Grafana
     end
 
     style Client fill:#f9f,stroke:#333,stroke-width:2px
@@ -29,193 +23,103 @@ graph TB
     style Queue fill:#bfb,stroke:#333,stroke-width:2px
     style Workers fill:#fbf,stroke:#333,stroke-width:2px
     style Redis fill:#fbb,stroke:#333,stroke-width:2px
-    style ES fill:#bff,stroke:#333,stroke-width:2px
-
-```
-
-```mermaid
-graph LR
-    subgraph Components
-        A[FastAPI] --> P{Prometheus}
-        W[Celery Workers] --> P
-        Q[RabbitMQ] --> P
-        RC[Redis] --> P
-    end
-    
-    subgraph Logs and Metrics
-        A --> ES[Elasticsearch]
-        W --> ES
-        Q --> ES
-        RC --> ES
-    end
-    
-    subgraph Visualization
-        P --> G[Grafana]
-        ES --> G
-    end
-    
-    subgraph Dashboards
-        G --> D1[System Health]
-        G --> D2[Prediction Analysis]
-        G --> D3[Performance Metrics]
-        G --> D4[Error Tracking]
-    end
-    
 ```
 
 ### Core Components
 
-#### FastAPI Application (Central Interface)
+#### FastAPI Application (API Layer)
 
-The FastAPI application serves as our system's primary entry point, handling all incoming prediction requests. It validates incoming data, manages request routing, and provides status updates for ongoing predictions. The async capabilities of FastAPI make it ideal for handling multiple concurrent requests efficiently.
+The FastAPI application serves as the system's entry point, handling text embedding requests. It:
+- Validates incoming requests
+- Routes tasks to appropriate queues
+- Provides model information endpoints
+- Returns task status and results
+- Includes health check endpoints
 
 #### RabbitMQ (Message Broker)
 
-RabbitMQ manages our task queue, ensuring reliable message delivery between components. It handles:
-
-- Distribution of prediction tasks to available workers
-- Message persistence for system reliability
-- Task prioritization and routing
-- Load balancing across workers
+RabbitMQ manages task distribution between components:
+- Routes embedding tasks to appropriate worker queues
+- Enables persistent message delivery
+- Supports task prioritization and load balancing
+- Creates model-specific queues for dedicated processing
 
 #### Celery Workers (Task Processing)
 
-Celery workers handle the actual model inference tasks. They:
+Celery workers handle the actual embedding operations:
+- Pull tasks from model-specific queues
+- Execute text embedding with the appropriate model
+- Store results in Redis
+- Provide task status updates
 
-- Pick up tasks from RabbitMQ queues
-- Execute model predictions
-- Store results in Redis temporarily
-- Handle task retries and failure scenarios
+#### Redis (Result Backend)
 
-#### Redis (Caching and Task Results)
+Redis stores task results and status information:
+- Maintains task result data
+- Provides fast retrieval for task status checks
+- Serves as Celery's result backend
 
-Redis serves two crucial purposes in our system:
+#### Flower (Celery Monitoring)
 
-1. Temporary storage for Celery task results, providing fast access to recent predictions
-2. Caching layer for frequently accessed data, improving system performance
+Flower provides real-time monitoring for Celery workers (configuration included but not active yet):
+- Dashboard for task progress and status
+- Worker status monitoring
+- Task history and statistics
+- Performance insights
 
-#### Elasticsearch (Permanent Storage and Analysis)
+#### Prometheus (Monitoring)
 
-Elasticsearch stores prediction results and system logs for long-term analysis. It provides:
-
-- Efficient storage and retrieval of prediction results
-- Full-text search capabilities for logs and predictions
-- Powerful aggregation features for analytics
-- Native integration with Grafana for visualization
-
-#### Prometheus (Performance Monitoring)
-
-Prometheus collects metrics from all system components, tracking:
-
+Prometheus collects metrics from all system components (currently in development):
 - API endpoint performance
-- Worker processing times
+- Worker processing metrics
 - Queue lengths and processing rates
-- System resource utilization
-
-#### Grafana (Visualization)
-
-Grafana creates dashboards that visualize system performance and prediction results. It connects natively to both Prometheus and Elasticsearch, providing:
-
-- Real-time monitoring dashboards
-- Prediction distribution visualizations
-- Performance trend analysis
-- Custom alerting based on metrics
-
-## System Workflow
-
-1. Request Processing:
-
-   ```
-   Client Request → FastAPI → RabbitMQ → Celery Worker → Model Inference
-   ```
-
-2. Result Handling:
-
-   ```
-   Model Prediction → Redis (temporary) → Elasticsearch (permanent)
-   ```
-
-3. Monitoring Flow:
-
-   ```
-   Components → Prometheus → Grafana Dashboards
-   ```
+- Error tracking and system resource utilization
 
 ## Project Structure
 
 ```
-serving_blueprint/
-├── api/
-│   ├── main.py              # FastAPI application
-│   ├── routes/              # API endpoints
-│   └── models/              # Request/response models
-├── workers/
-│   ├── tasks.py             # Celery task definitions
-│   └── models/              # ML model handlers
-├── monitoring/
-│   ├── prometheus/          # Prometheus configuration
-│   └── grafana/             # Grafana dashboards
-├── deployment/
-│   ├── docker/              # Dockerfiles
-│   └── kubernetes/          # K8s manifests
-└── config/                  # Configuration files
+text_embedding_service/
+├── src/
+│   ├── api/
+│   │   ├── app.py                 # FastAPI application
+│   │   ├── router.py              # API router configuration
+│   │   └── routes/
+│   │       ├── health.py          # Health check endpoints
+│   │       └── text_embedding.py  # Text embedding endpoints
+│   ├── core/
+│   │   ├── config/                # Configuration files
+│   │   └── logger.py              # Logging configuration
+│   ├── ml/
+│   │   └── text_embedding_service.py  # ML model handling service
+│   ├── monitoring/
+│   │   ├── instrumentator.py      # Prometheus instrumentation
+│   │   └── metrics.py             # Custom metrics definitions
+│   └── workers/
+│       ├── text_embedding_workers.py  # Worker task definitions
+│       └── worker.py              # Worker initialization
+├── Dockerfile.api                 # Docker config for API service
+├── Dockerfile.worker              # Docker config for workers
+├── compose.yaml                   # Main Docker Compose config
+├── compose.api.yaml               # API service Docker Compose config
+└── compose.rr.yaml                # Redis/RabbitMQ Docker Compose config
 ```
 
-## Technology Stack Explanation
+## Workflow
 
-### API Layer (FastAPI)
+1. **Request Processing**:
+   ```
+   Client Request → FastAPI → RabbitMQ → Celery Worker → ML Model Inference
+   ```
 
-FastAPI provides a modern, fast web framework that's perfect for ML serving because:
+2. **Result Handling**:
+   ```
+   Model Inference → Redis (Result Storage) → API Response
+   ```
 
-- Automatic OpenAPI documentation
-- Built-in request validation
-- Excellent async support
-- Type checking and IDE support
-
-### Message Queue (RabbitMQ)
-
-RabbitMQ handles our task distribution because it offers:
-
-- Reliable message delivery
-- Multiple queue patterns
-- Message persistence
-- Good monitoring tools
-
-### Task Processing (Celery)
-
-Celery manages our distributed tasks by providing:
-
-- Reliable task execution
-- Worker pool management
-- Task retries and error handling
-- Result backend support
-
-### Caching (Redis)
-
-Redis serves as our caching layer because it provides:
-
-- Fast in-memory storage
-- Built-in data structures
-- Automatic key expiration
-- Celery result backend support
-
-### Storage (Elasticsearch)
-
-Elasticsearch stores our prediction results and logs because it offers:
-
-- Efficient full-text search
-- Powerful aggregations
-- Native Grafana integration
-- Scalable storage
-
-### Monitoring (Prometheus + Grafana)
-
-This combination provides comprehensive monitoring:
-
-- Metric collection and storage
-- Custom dashboard creation
-- Alerting capabilities
-- Long-term trend analysis
+3. **Monitoring** (In development):
+   ```
+   Components → Prometheus → Grafana Dashboards
+   ```
 
 ## Getting Started
 
@@ -223,91 +127,167 @@ This combination provides comprehensive monitoring:
 
 - Docker and Docker Compose
 - Python 3.8+
-- Kubernetes cluster (for production deployment)
+- uv (Python package manager) for dependency management
 
 ### Local Development Setup
 
 1. Clone the repository
-2. Create a virtual environment
-3. Install dependencies
-4. Run development services using Docker Compose
+2. Use the provided `.env` file or create your own with the required environment variables:
+   ```
+   # API Configuration
+   API_PORT=8000
+   API_HOST=0.0.0.0
+   
+   # RabbitMQ Configuration
+   RABBITMQ_HOST=rabbitmq
+   RABBITMQ_USER=guest
+   RABBITMQ_PASSWORD=guest
+   RABBITMQ_PORT=5672
+   RABBITMQ_MANAGEMENT_PORT=15672
+   
+   # Redis Configuration
+   REDIS_HOST=redis
+   REDIS_PORT=6379
+   REDIS_PASSWORD=your_redis_password
+   
+   # Flower Configuration
+   FLOWER_PORT=5555
+   FLOWER_USER=admin
+   FLOWER_PASSWORD=admin
+   ```
+3. Start the services using Make or Docker Compose:
+   ```bash
+   # Using Make
+   make start
+   
+   # Or using Docker Compose directly
+   docker compose up -d
+   ```
 
-### Production Deployment
+### Available Endpoints
 
-1. Build container images
-2. Apply Kubernetes manifests
-3. Configure monitoring
-4. Set up Grafana dashboards
+- `GET /api/health` - Service health check
+- `GET /api/v1/embedding/models` - List available embedding models
+- `POST /api/v1/embedding/` - Create embedding for text
+- `GET /api/v1/embedding/{task_id}` - Get embedding task results
 
-## Configuration
+## Technology Stack
 
-### Environment Variables
+- **FastAPI**: Modern, high-performance web framework
+- **Celery**: Distributed task queue
+- **RabbitMQ**: Message broker
+- **Redis**: Result backend and caching
+- **Prometheus**: Metrics collection (in development)
+- **Grafana**: Visualization (in development)
+- **Docker & Docker Compose**: Containerization and orchestration
 
-- `RABBITMQ_URL`: RabbitMQ connection string
-- `REDIS_URL`: Redis connection string
-- `ELASTICSEARCH_URL`: Elasticsearch connection string
-- Additional configuration variables detailed in config/
+## Current Development Status
 
-### Scaling Considerations
+### Implemented Features
+- ✅ FastAPI application with embedding endpoints
+- ✅ Celery workers for distributed processing
+- ✅ RabbitMQ message queuing
+- ✅ Redis result backend
+- ✅ Model-specific worker configuration
+- ✅ Basic health check endpoints
+- ✅ Docker containerization
 
-- Horizontal scaling of API and workers
-- Redis cluster for larger deployments
-- Elasticsearch cluster configuration
-- RabbitMQ cluster setup
+### In Progress / To Do
+- ⏳ Complete Prometheus metrics integration
+- ⏳ Grafana dashboard setup
+- ⏳ Error handling improvements
+- ⏳ Enhanced logging
+- ⏳ Unit and integration tests
+- ⏳ CI/CD pipeline
+- ⏳ Kubernetes deployment configuration
 
-## Monitoring and Analysis
+## Environment Variables
 
-### Available Metrics
+The project uses a `.env` file for configuration. Here are the key environment variables:
 
-- Request latency
-- Prediction distributions
-- Error rates
-- Queue lengths
-- Worker performance
+| Variable | Description | Default |
+|----------|-------------|---------|
+| API_HOST | API service hostname | 0.0.0.0 |
+| API_PORT | API service port | 8000 |
+| RABBITMQ_HOST | RabbitMQ server hostname | rabbitmq |
+| RABBITMQ_USER | RabbitMQ username | guest |
+| RABBITMQ_PASSWORD | RabbitMQ password | guest |
+| RABBITMQ_PORT | RabbitMQ service port | 5672 |
+| RABBITMQ_MANAGEMENT_PORT | RabbitMQ management UI port | 15672 |
+| REDIS_HOST | Redis server hostname | redis |
+| REDIS_PORT | Redis service port | 6379 |
+| REDIS_PASSWORD | Redis password | your_redis_password |
+| FLOWER_PORT | Flower monitoring UI port | 5555 |
+| FLOWER_USER | Flower admin username | admin |
+| FLOWER_PASSWORD | Flower admin password | admin |
+| LOG_LEVEL | Logging level | INFO |
+| MODEL_TYPE | Type of model for worker | text_embedding |
+| MODEL_KEY | Model key for worker | - |
 
-### Grafana Dashboards
+> Note: The `.env` file includes commented alternative configurations for local development vs. containerized services. Adjust the host settings depending on your deployment environment.
 
-- System overview
-- Prediction analysis
-- Performance metrics
-- Error tracking
+## Running in Production
 
-## Best Practices
+For production environments:
 
-### Development
+1. Configure appropriate resource limits in Docker Compose files
+2. Set up proper monitoring and alerting
+3. Implement proper security measures (API authentication, secure connections)
+4. Consider using Kubernetes for container orchestration
 
-- Use type hints
-- Write comprehensive tests
-- Document API endpoints
-- Monitor resource usage
+## Contributing
 
-### Deployment
+When contributing to this project:
+1. Fork the repository
+2. Create a feature branch
+3. Add your changes
+4. Submit a pull request
 
-- Use container health checks
-- Implement circuit breakers
-- Set up proper logging
-- Configure appropriate resource limits
+## How to Run
 
-### Monitoring
-
-- Set up alerting
-- Monitor queue lengths
-- Track error rates
-- Analyze prediction patterns
-
-## How to run
+The project includes a Makefile with useful commands for common operations:
 
 ```bash
-# export requirements.txt
-uv export --no-dev --no-hashes > requirements.txt
+# Generate requirements.txt file
+make create-req-file
 
-# docker compose up -d
+# Generate development requirements
+make create-dev-req-file
+
+# Start all services
+make start
+
+# Stop all services
+make stop
+
+# View service logs
+make logs
+
+# Clean Python cache files
+make clean-file
+
+# Format code using ruff
+make format
+
+# Lint code using ruff
+make lint
+
+# Display help with all available commands
+make help
+```
+
+Alternative Docker commands:
+
+```bash
+# Start all services
 docker compose up -d
 
+# Start only API service
+docker compose -f compose.api.yaml up -d
 
-# to build docker image
-docker build -t python-fastapi:latest .
-# docker build --no-cache -t python-fastapi:latest .
+# Start only Redis and RabbitMQ
+docker compose -f compose.rr.yaml up -d
 
-
+# Build specific Docker image
+docker build -t text-embedding-api:latest -f Dockerfile.api .
 ```
