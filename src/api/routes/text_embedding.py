@@ -13,8 +13,7 @@ from src.api.schemas.embedding import (
     #BatchEmbeddingRequest,
     #TaskResultResponse
 )
-# from src.ml import text_embedding_service
-# from src.workers import text_embedding_workers
+
 from src.workers.text_embedding_workers import TextEmbeddingWorkerService,create_celery_app
 
 router = APIRouter()
@@ -99,62 +98,3 @@ async def get_task_result(
         raise HTTPException(status_code=500, detail=f"Error retrieving task result: {str(e)}")
 
 
-# @router.get("/ping")  
-# def get_rabbit_ping():
-#     import requests
-
-#     url =  "http://localhost:15672/"
-
-#     res = requests.get(url)
-#     print(configs.RABBITMQ_URL)
-
-#     if res.status_code == 200:
-#         return {"status": "OK"}
-#     else:
-#         return {"status": "ERROR"}
-    
-
-# @router.post("/batch", response_model=TextEmbeddingResponse)
-# async def create_batch_embedding(
-#     request: BatchEmbeddingRequest,
-#     embedding_service: EmbeddingService = Depends(get_embedding_service)
-# ):
-#     """
-#     Create embeddings for multiple texts using the specified model.
-#     """
-#     # Validate model name
-#     if request.model_name not in configs.EMBEDDING_MODELS:
-#         raise HTTPException(
-#             status_code=400,
-#             detail=f"Model '{request.model_name}' not available. Use one of: {configs.EMBEDDING_MODELS}"
-#         )
-    
-#     # Send texts to embedding task
-#     try:
-#         result = embedding_service.send_text_to_task(
-#             texts=request.texts,
-#             model_name=request.model_name
-#         )
-        
-#         return TextEmbeddingResponse(
-#             task_id=result["task_id"],
-#             model_name=request.model_name,
-#             status=result["status"]
-#         )
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-
-# @router.get("/{task_id}", response_model=TaskResultResponse)
-# async def get_task_result(
-#     task_id: str,
-#     embedding_service: EmbeddingService = Depends(get_embedding_service)
-# ):
-#     """
-#     Get the result of a text embedding task.
-#     """
-#     try:
-#         result = embedding_service.get_task_result(task_id)
-#         return TaskResultResponse(**result)
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"Error retrieving task result: {str(e)}")
