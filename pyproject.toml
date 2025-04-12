@@ -1,33 +1,26 @@
 [project]
-name = "ml-model-serving"
+name = "serving-blueprint"
 version = "0.1.0"
-description = "Serving machine learning models with FastAPI and RabbitMQ for scalable async inference"
+description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "celery>=5.4.0",
-    "fastapi>=0.115.6",
-    "onnx>=1.17.0",
-    "onnxruntime>=1.20.1",
-    "pillow>=11.0.0",
-    "prometheus-fastapi-instrumentator>=7.0.0",
-    "pydantic-settings[yaml]>=2.7.0",
+    "fastapi>=0.115.11",
+    "light-embed==1.0.7",
+    "onnxruntime>=1.19.2",
+    "pillow>=11.1.0",
+    "prometheus-fastapi-instrumentator>=7.0.2",
+    "pydantic-settings>=2.8.1",
     "python-multipart>=0.0.20",
     "redis>=5.2.1",
     "uvicorn>=0.34.0",
 ]
 
-
-[tool.black]
-line-length = 88
-target-version = ["py311"]
-
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-
-[tool.ruff]
-select = ["E", "F", "B"]
-ignore = ["E501"]
-target-version = "py311"
-
+[tool.uv]
+dev-dependencies = [
+    "ipython==8.22.0",
+    "jupyter>=1.1.1",
+    "jupyterlab>=4.3.5",
+    "pymongo>=4.11.1",
+]
