@@ -1,0 +1,98 @@
+# Application Settings
+app_name: "Semantic Search API"
+app_version: "0.1.4"
+app_description: "API for semantic search of articles using embedding models"
+
+# Model Settings
+embedding_model: "emrecan/bert-base-turkish-cased-mean-nli-stsb-tr"
+
+# Data source settings
+data_source: "data/df_6d112934.parquet"
+data_source_type: "sql"  # "parquet" veya "sql" olabilir
+
+# Data initialization settings
+data_init_config:
+  cache_path: "data/cache/df_6d112934.parquet"
+  cache_ttl: 3600  # 1 saat
+  data_source_query: "SELECT id, title, detail, shortdescription, mobileimagepath, desktopimagepath, tabletimagepath, title_embedding, short_description_embedding, full_text_embedding FROM articles WHERE is_active = true"
+  required_columns: ["id", "title"]
+  allow_empty_dataset: false
+  auto_refresh: true  # Otomatik veri yenileme etkin
+  refresh_interval: 86400  # 60*60*24 =   # 24 saat
+
+# Database settings - data_source_type "sql" olduğunda kullanılır
+ds_settings:
+  db_name: "article_db"
+  db_host: "localhost"
+  db_port: 5432
+  db_user: "postgres"
+  use_connection_pool: true
+  min_connections: 1
+  max_connections: 10
+  schema: "public"
+  table_name: "articles"
+
+# API Settings
+api_port: 8000
+api_host: "0.0.0.0"
+
+# Search Configuration
+default_top_n: 10
+
+# Search Weights
+weights:
+  progressive: 0.2
+  title_embedding: 0.7
+  short_embedding: 0.0
+  long_embedding: 0.1
+
+# Search Thresholds
+thresholds:
+  progressive: 0.0
+  title_embedding: 0.0
+  short_embedding: 0.0
+  long_embedding: 0.0
+  final_score: 0.0
+
+# Logger Settings
+logger_name: "ssearch"
+log_level: "INFO"
+log_dir: "./logs"
+
+logger_settings:
+  handler: "file" # logger type (file, console, mongodb, elasticsearch)
+  name: "semantic_search"
+  level: "INFO"
+  dir: "./logs"
+  max_bytes: 10485760  # 10MB
+  backup_count: 5
+  batch_size: 1
+  log_model_outputs: true
+  sensitive_fields:
+    - "password"
+    - "key"
+    - "token"
+    - "secret"
+
+# MongoDB Logger Settings (if needed)
+logger_settings.mongodb_url: "mongodb://localhost:27017"
+logger_settings.mongodb_settings:
+  db_name: "logs_db"
+  collection_name: "ml_logs"
+
+# Elasticsearch Logger Settings (if needed)
+logger_settings.elasticsearch_hosts:
+  - "http://localhost:9200"
+
+logger_settings.elasticsearch_settings:
+  index_prefix: "ml-logs-"
+  use_ssl: false
+
+# # Database Connection Settings
+# ds_settings:
+#   db_name: "article_db"
+#   db_host: "localhost"
+#   db_port: 5432
+#   db_user: "postgres"
+#   db_connect_timeout: 30
+#   use_ssl: false
