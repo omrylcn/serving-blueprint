@@ -3,7 +3,7 @@ from typing import Dict, List, Union, Optional, Any
 from kombu import log
 import numpy as np
 import os
-from src.core.config  import configs,ModelConfig
+from src.core.config  import settings,ModelConfig
 from src.core.logger import logger
 from light_embed import TextEmbedding
 

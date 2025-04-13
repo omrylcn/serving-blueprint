@@ -1,2 +1,5 @@
 legacy
 .venv
+workspace.ipynb
+.env
+dev

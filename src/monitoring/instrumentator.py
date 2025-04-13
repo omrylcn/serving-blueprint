@@ -1,7 +1,8 @@
-from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_fastapi_instrumentator import Instrumentator,metrics
 from fastapi import FastAPI
 
 def setup_monitoring(app: FastAPI) -> None:
     """Configure Prometheus monitoring for the FastAPI application"""
-    
-    Instrumentator().instrument(app).expose(app)
+    instrumentator = Instrumentator()
+    instrumentator.add(metrics.default())
+    instrumentator.instrument(app).expose(app)

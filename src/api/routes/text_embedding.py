@@ -4,7 +4,7 @@ from typing import List, Dict, Any
 from light_embed.utils import model
 
 from src import ml
-from src.core.config import ml_configs,configs
+from src.core.config import ml_settings,settings
 
 from src.api.schemas.embedding import (
     TextEmbeddingRequest,
@@ -19,11 +19,11 @@ from src.workers.text_embedding_workers import TextEmbeddingWorkerService,create
 router = APIRouter()
 
 # Dependency to get embedding service
-def get_embedding_worker_service(configs)->TextEmbeddingWorkerService:
-    celery_app = create_celery_app(configs)
+def get_embedding_worker_service(settings)->TextEmbeddingWorkerService:
+    celery_app = create_celery_app(settings)
     return TextEmbeddingWorkerService(celery_app)
 
-text_embedding_worker_service = get_embedding_worker_service(configs)
+text_embedding_worker_service = get_embedding_worker_service(settings)
 
 @router.get("/models") #, response_model=List[ModelInfoResponse])
 async def get_available_models():
@@ -32,8 +32,8 @@ async def get_available_models():
     """
     models = []
 
-    for key,model_name in configs.ML_MODELS['text_embedding'].items():
-        ml_cfg = ml_configs.models[model_name]
+    for key,model_name in settings.ML_MODELS['text_embedding'].items():
+        ml_cfg = ml_settings.models[model_name]
         models.append(
             ModelInfoResponse(
                  name=ml_cfg.name,
@@ -55,17 +55,17 @@ async def create_embedding(
     Create embeddings for a single text using the specified model.
     """
     # Validate model name
-    if request.model_key not in configs.ML_MODELS['text_embedding'].keys():
+    if request.model_key not in settings.ML_MODELS['text_embedding'].keys():
         raise HTTPException(
             status_code=400,
-            detail=f"Model '{request.model_key}' not available. Use one of: {configs.ML_MODELS['text_embedding']}"
+            detail=f"Model '{request.model_key}' not available. Use one of: {settings.ML_MODELS['text_embedding']}"
         )
     
     # Send text to embedding task
-    model_name = configs.ML_MODELS['text_embedding'][request.model_key]
+    model_name = settings.ML_MODELS['text_embedding'][request.model_key]
     model_key = request.model_key
 
-    print(configs.model_dump())
+    print(settings.model_dump())
     try:
         result = text_embedding_worker_service.send_as_task(
             texts=[request.text],

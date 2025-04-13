@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.core.config.main import configs
+from src.core.config.main import settings
 from src.api.router import api_router
 from src.monitoring.instrumentator import setup_monitoring
 
@@ -14,9 +14,9 @@ def create_application() -> FastAPI:
         FastAPI: Configured FastAPI application instance
     """
     app = FastAPI(
-        title=configs.PROJECT_NAME,
+        title=settings.project_name,
         description="API for text embedding using various models",
-        version=configs.PROJECT_VERSION,
+        version=settings.project_version,
         docs_url="/docs",
         redoc_url="/redoc",
     )

@@ -3,7 +3,7 @@ import os
 from typing import Text
 from src.workers.text_embedding_workers import TextEmbeddingWorkerService, EmbeddingTaskConfig, create_celery_app
 from src.ml.text_embedding_service import TextEmbeddingService
-from src.core.config.main import configs,ml_configs
+from src.core.config.main import settings,ml_settings
 from src.core.logger import logger
 
 # Get model key from environment variable
@@ -19,8 +19,8 @@ if model_type is None:
 try:
     # Find model config by key
     model_key = int(model_key)
-    model_name = configs.ML_MODELS[model_type][model_key]
-    ml_config = ml_configs.models[model_name]
+    model_name = settings.ml_models[model_type][model_key]
+    ml_config = ml_settings.models[model_name]
     model_version = ml_config.version
     # model_path = model_config.path
 
@@ -30,7 +30,7 @@ try:
     text_embedding_service = TextEmbeddingService(ml_config).load()
     
     # Create embedding service
-    celery_app = create_celery_app(configs)
+    celery_app = create_celery_app(settings)
     text_embedding_worker = TextEmbeddingWorkerService(celery_app)
     
     # Create worker task
