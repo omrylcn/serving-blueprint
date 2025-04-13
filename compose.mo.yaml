@@ -1,0 +1,89 @@
+version: '3.8'
+name: monitoring
+services:
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./mlops/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    restart: always
+    networks:
+      - mlops-network
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.4
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    restart: always
+    networks:
+      - mlops-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Grafana Visualization - For both Prometheus and Elasticsearch
+  grafana:
+    image: grafana/grafana
+    ports:
+      - '3000:3000'
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      # Elasticsearch and other useful plugins
+     # - GF_INSTALL_PLUGINS=grafana-elasticsearch-datasource,grafana-piechart-panel,grafana-worldmap-panel
+    volumes:
+      # For automatic datasource configuration
+      - ./mlops/grafana/datasources:/etc/grafana/provisioning/datasources
+      # For preconfigured dashboards
+      - ./mlops/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      # For persistent Grafana configuration and data
+      - grafana_data:/var/lib/grafana
+    restart: always
+    depends_on:
+      - prometheus
+      - elasticsearch
+    networks:
+      - mlops-network
+
+  # Monitoring Service (Flower)
+  # flower:
+  #   image: mher/flower
+  #   ports:
+  #     - '5555:5555'
+  #   environment:
+  #     - CELERY_BROKER_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672//
+  #     - FLOWER_BASIC_AUTH=${FLOWER_USER}:${FLOWER_PASSWORD}
+  #   depends_on:
+  #     - rabbitmq
+  #   restart: always
+  #   networks:
+  #     - mlops-network
+
+volumes:
+  rabbitmq_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+  elasticsearch_data:
+
+networks:
+  mlops-network:
+    driver: bridge

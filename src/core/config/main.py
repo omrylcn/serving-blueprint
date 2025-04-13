@@ -47,10 +47,16 @@ class APPSettings(BaseSettings):
     log_dir: str = Field(default="logs")
     logger_format: str = Field(default="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
-    # MinIO Configuration
-    minio_endpoint: str = Field(default="localhost")
-    minio_access_key: str = Field(default="minioadmin")
-    minio_secret_key: str = Field(default="minioadmin")
+    sensitive_fields: List[str] = Field(
+        default=["password", "key", "token", "secret"],
+        description="Fields to redact in logs"
+    )
+
+
+    # # MinIO Configuration
+    # minio_endpoint: str = Field(default="localhost")
+    # minio_access_key: str = Field(default="minioadmin")
+    # minio_secret_key: str = Field(default="minioadmin")
 
     # Elasticsearch Configuration
     elasticsearch_host: str = Field(default="elasticsearch")
@@ -58,6 +64,8 @@ class APPSettings(BaseSettings):
     elasticsearch_user: str = Field(default="elastic")
     elasticsearch_password: str = Field(default="changeme")
     elasticsearch_verify_certs: bool = Field(default=False)
+    timeout: int = Field(default=30, description="Timeout for Elasticsearch operations")
+    batch_size: int = Field(default=100,description="Batch size for bulk operations") 
 
 
     @property

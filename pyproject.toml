@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "celery>=5.4.0",
+    "elasticsearch>=8.17.2",
     "fastapi>=0.115.11",
     "light-embed==1.0.7",
     "onnxruntime>=1.19.2",
