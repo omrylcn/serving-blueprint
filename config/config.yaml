@@ -1,3 +1,6 @@
+project_version: 0.1.0
+logger_type: elasticsearch
+
 ml_config_path: config/ml_config.yaml
 
 # available model types

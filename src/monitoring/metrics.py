@@ -1,6 +1,6 @@
 from prometheus_client import Counter, Histogram, Gauge
 
-class StyleTransferMetrics:
+class TextEmbeddingMetrics:
     """Centralized metrics collection for style transfer operations"""
     
     def __init__(self):
@@ -39,4 +39,4 @@ class StyleTransferMetrics:
         )
 
 # Create a singleton instance
-style_transfer_metrics = StyleTransferMetrics()
+style_transfer_metrics = TextEmbeddingMetrics()

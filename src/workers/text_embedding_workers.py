@@ -126,6 +126,7 @@ class TextEmbeddingWorkerService:
         """
         result = self.celery_app.AsyncResult(task_id)
         
+        
         response = {
             "task_id": task_id,
             "status": result.status
