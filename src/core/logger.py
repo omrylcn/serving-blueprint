@@ -1,4 +1,3 @@
-
 """
 Advanced logging handlers for ML API operations.
 
@@ -18,7 +17,8 @@ from typing import Dict, Any, List, Union, Optional
 from src.core.config import settings
 
 
-VALID_LOGGER_HANDLERS = ['file',  'elasticsearch', 'composite', "console"]
+VALID_LOGGER_HANDLERS = ["elasticsearch", "console"]
+
 
 class BaseDBLogger(ABC):
     """
@@ -28,7 +28,13 @@ class BaseDBLogger(ABC):
     common functionality such as context management and log formatting.
     """
 
-    def __init__(self, name: str, tag: Optional[str] = None, context: Optional[Dict[str, Any]] = None,log_level: Optional[str]=None) -> None:
+    def __init__(
+        self,
+        name: str,
+        tag: Optional[str] = None,
+        context: Optional[Dict[str, Any]] = None,
+        log_level: Optional[str] = None,
+    ) -> None:
         """
         Initialize the base database logger.
 
@@ -48,7 +54,7 @@ class BaseDBLogger(ABC):
         self.unique_name = f"{name}_{tag}" if tag else name
         self.tag = tag
         self.context = context or {}
-        
+
         self.connection_error = False
         self.logger = self._setup_logger()
 
@@ -110,7 +116,7 @@ class BaseDBLogger(ABC):
         pass
 
     @abstractmethod
-    def log_model_results(self, input_info: Dict[str, Any], results: Dict[str, Any],**kwargs) -> None:
+    def log_model_results(self, input_info: Dict[str, Any], results: Dict[str, Any], **kwargs) -> None:
         """
         Log model prediction results.
 
@@ -149,7 +155,7 @@ class BaseDBLogger(ABC):
         return {
             "timestamp": str(datetime.now()),
             "logger_name": self.name,
-            "tag_name": self.unique_name, 
+            "tag_name": self.unique_name,
             **self.context,
             **base_data,
             **additional_data,
@@ -193,7 +199,7 @@ class BaseDBLogger(ABC):
             Additional information to include in the log
         """
         self.logger.error(message, **kwargs)
-    
+
     def debug(self, message: str, **kwargs) -> None:
         """
         Log a debug message.
@@ -211,12 +217,12 @@ class BaseDBLogger(ABC):
 class DefaultLogger(BaseDBLogger):
     """
     Default logger implementation with minimal functionality.
-    
+
     This logger provides safe implementations of all abstract methods
     but only logs warnings when specialized methods are called.
     It's used as a fallback when other logger types cannot be created.
     """
-    
+
     def __init__(self, name: str, tag: Optional[str] = None, **kwargs):
         """
         Initialize the default logger.
@@ -231,11 +237,11 @@ class DefaultLogger(BaseDBLogger):
             Additional context information
         """
         super().__init__(name, tag, **kwargs)
-        
+
     def _setup_logger(self) -> logging.Logger:
         """
         Create and configure the logger instance.
-        
+
         Returns
         -------
         logging.Logger
@@ -243,21 +249,21 @@ class DefaultLogger(BaseDBLogger):
         """
         logger = logging.getLogger(f"console_{self.unique_name}")
         logger.setLevel(getattr(logging, self.log_level))
-        
+
         # Avoid duplicate handlers
         if logger.handlers:
             return logger
-        
+
         handler = logging.StreamHandler()
         formatter = logging.Formatter(self.log_format)
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         return logger
-    
+
     def log_operation(self, message: str, level: str = "info", **kwargs) -> None:
         """
         Log an operational event.
-        
+
         Parameters
         ----------
         message : str
@@ -269,11 +275,11 @@ class DefaultLogger(BaseDBLogger):
         """
         # Just log the message with standard logger
         getattr(self.logger, level)(message)
-    
+
     def log_metadata(self, metadata: Dict[str, Any]) -> None:
         """
         Log model metadata information.
-        
+
         Parameters
         ----------
         metadata : Dict[str, Any]
@@ -281,14 +287,13 @@ class DefaultLogger(BaseDBLogger):
         """
         # Just log a warning that metadata logging is not supported
         self.logger.warning(
-            f"Metadata logging not supported in DefaultLogger. "
-            f"Metadata keys: {', '.join(metadata.keys())}"
+            f"Metadata logging not supported in DefaultLogger. " f"Metadata keys: {', '.join(metadata.keys())}"
         )
-    
-    def log_model_results(self, input_info: Dict[str, Any], results: Dict[str, Any],*args,**kwargs) -> None:
+
+    def log_model_results(self, input_info: Dict[str, Any], results: Dict[str, Any], *args, **kwargs) -> None:
         """
         Log model prediction results.
-        
+
         Parameters
         ----------
         input_info : Dict[str, Any]
@@ -298,10 +303,9 @@ class DefaultLogger(BaseDBLogger):
         """
         # Just log a warning that results logging is not supported
         self.logger.warning(
-            f"Model results logging not supported in DefaultLogger. "
-            f"Results keys: {', '.join(results.keys())}"
+            f"Model results logging not supported in DefaultLogger. " f"Results keys: {', '.join(results.keys())}"
         )
-    
+
     def flush_all(self) -> None:
         """
         Flush handlers to ensure all logs are written.
@@ -322,7 +326,12 @@ class ElasticsearchLogger(BaseDBLogger):
     """
 
     def __init__(
-        self, name: str, tag: Optional[str]=None, es_hosts: Optional[List[str]] = None, batch_size: Optional[int] = None, **kwargs
+        self,
+        name: str,
+        tag: Optional[str] = None,
+        es_hosts: Optional[List[str]] = None,
+        batch_size: Optional[int] = None,
+        **kwargs,
     ):
         """
         Initialize the Elasticsearch logger.
@@ -345,7 +354,7 @@ class ElasticsearchLogger(BaseDBLogger):
         self.es = None
         self.batch = {"operations": [], "metadata": [], "results": []}
         self._log_depth = 0  # Simple recursive logging prevention
-        
+
         # Initialize parent
         super().__init__(name, tag, **kwargs)
 
@@ -355,8 +364,8 @@ class ElasticsearchLogger(BaseDBLogger):
 
             # Get configuration with defaults
             es_hosts = es_hosts or (
-                [settings.elasticsearch_host] 
-                if isinstance(settings.elasticsearch_host, str) 
+                [settings.elasticsearch_host]
+                if isinstance(settings.elasticsearch_host, str)
                 else settings.elasticsearch_host
             )
             self.batch_size = batch_size or settings.batch_size
@@ -368,9 +377,9 @@ class ElasticsearchLogger(BaseDBLogger):
                 return
 
             # Setup Elasticsearch client
-            #es_config = settings.logger_settings.elasticsearch_settings
+            # es_config = settings.logger_settings.elasticsearch_settings
             timeout = settings.timeout
-            
+
             self.es = Elasticsearch(
                 es_hosts,
                 timeout=timeout,
@@ -379,7 +388,7 @@ class ElasticsearchLogger(BaseDBLogger):
                 # Additional auth params if needed
                 # basic_auth=(username, password)
             )
-            
+
             # Test connection
             try:
                 if not self.es.ping():
@@ -399,7 +408,7 @@ class ElasticsearchLogger(BaseDBLogger):
             except Exception as e:
                 self.logger.warning(f"Failed to create Elasticsearch template: {e}")
                 # Continue anyway
-            
+
         except ImportError as e:
             self.connection_error = True
             self.logger.error(f"Elasticsearch package not available: {e}")
@@ -407,11 +416,11 @@ class ElasticsearchLogger(BaseDBLogger):
             self.connection_error = True
             self.logger.error(f"Error setting up Elasticsearch connection: {e}", exc_info=True)
             print(f"Error setting up Elasticsearch connection: {e}")
-    
+
     def _setup_logger(self) -> logging.Logger:
         """
         Create and configure the logger instance.
-        
+
         Returns
         -------
         logging.Logger
@@ -436,7 +445,7 @@ class ElasticsearchLogger(BaseDBLogger):
         """
         if self.connection_error or self.es is None:
             return
-            
+
         template = {
             "index_patterns": [f"{self.index_prefix}*"],
             "template": {
@@ -469,7 +478,9 @@ class ElasticsearchLogger(BaseDBLogger):
         """
         if self.connection_error or self.es is None or not self.batch[batch_type]:
             if self.batch[batch_type]:
-                self.logger.warning(f"{len(self.batch[batch_type])} {batch_type} logs couldn't be sent to Elasticsearch")
+                self.logger.warning(
+                    f"{len(self.batch[batch_type])} {batch_type} logs couldn't be sent to Elasticsearch"
+                )
                 self.batch[batch_type] = []  # Clear to avoid memory leaks
             return
 
@@ -479,21 +490,23 @@ class ElasticsearchLogger(BaseDBLogger):
 
             max_retries = 3
             retry_delay = 1.0
-            
+
             # Make a copy and clear the batch to avoid holding items while processing
             actions = list(self.batch[batch_type])
             self.batch[batch_type] = []
 
             for attempt in range(max_retries):
                 try:
-                   
+
                     success, errors = bulk(self.es, actions, request_timeout=30, stats_only=False)
                     break
                 except Exception as e:
-                    
-                    self.logger.error(f"{batch_type} batch flush error (attempt {attempt+1}/{max_retries}): {e}",exc_info=True)
-                    
-                    #self.logger.error(f"errors :  {errors}")
+
+                    self.logger.error(
+                        f"{batch_type} batch flush error (attempt {attempt+1}/{max_retries}): {e}", exc_info=True
+                    )
+
+                    # self.logger.error(f"errors :  {errors}")
                     if attempt < max_retries - 1:
                         time.sleep(retry_delay)
                         retry_delay *= 2  # Exponential backoff
@@ -508,7 +521,7 @@ class ElasticsearchLogger(BaseDBLogger):
     def log_operation(self, message: str, level: str = "info", **kwargs) -> None:
         """
         Log an operational event.
-        
+
         Parameters
         ----------
         message : str
@@ -525,13 +538,13 @@ class ElasticsearchLogger(BaseDBLogger):
                 print(f"WARNING: Recursive logging detected: {message}")
                 self._log_depth -= 1
                 return
-                
+
             # Ensure message is a string
             if message is None:
                 message = "None"
             elif not isinstance(message, str):
                 message = str(message)
-            
+
             # Log to standard logger
             getattr(self.logger, level)(message)
 
@@ -541,7 +554,7 @@ class ElasticsearchLogger(BaseDBLogger):
 
             # Create and send document
             doc = self.format_log_entry({"message": message, "level": level}, **kwargs)
-            
+
             action = {"_index": f"{self.index_prefix}_operations", "_source": doc}
             self.batch["operations"].append(action)
 
@@ -557,7 +570,7 @@ class ElasticsearchLogger(BaseDBLogger):
     def log_metadata(self, metadata: Dict[str, Any]) -> None:
         """
         Log model metadata information.
-        
+
         Parameters
         ----------
         metadata : Dict[str, Any]
@@ -565,26 +578,26 @@ class ElasticsearchLogger(BaseDBLogger):
         """
         try:
             # Input validation
-            
+
             if metadata is None or not isinstance(metadata, dict):
-             
+
                 self.logger.warning("Invalid metadata format. Skipping Elasticsearch logging.")
                 metadata = None
-                
+
             # Log to console safely
             try:
-                keys = ', '.join(metadata.keys()) if hasattr(metadata, 'keys') else 'unknown format'
+                keys = ", ".join(metadata.keys()) if hasattr(metadata, "keys") else "unknown format"
                 if keys == "unknown format":
                     self.log_operation(f"Metadata logged: {keys}, no logging", "warning")
                     return
-            
+
             except Exception as e:
                 self.logger.warning(f"Error extracting metadata keys: {e}")
-            
+
             # Skip Elasticsearch if connection issues
             if self.connection_error or self.es is None:
                 return
-                
+
             doc = self.format_log_entry({"metadata": metadata})
             action = {"_index": f"{self.index_prefix}_metadata", "_source": doc}
             self.batch["metadata"].append(action)
@@ -594,10 +607,10 @@ class ElasticsearchLogger(BaseDBLogger):
         except Exception as e:
             self.logger.error(f"Error in log_metadata: {e}", exc_info=True)
 
-    def log_model_results(self, input_info: Dict[str, Any], results: Dict[str, Any],**kwargs) -> None:
+    def log_model_results(self, input_info: Dict[str, Any], results: Dict[str, Any], **kwargs) -> None:
         """
         Log model prediction results.
-        
+
         Parameters
         ----------
         input_info : Dict[str, Any]
@@ -611,7 +624,7 @@ class ElasticsearchLogger(BaseDBLogger):
                 input_info = {}
             if results is None:
                 results = {}
-            
+
             # # Log to console safely
             # try:
             #     # Only log input keys if configured to do so
@@ -622,12 +635,11 @@ class ElasticsearchLogger(BaseDBLogger):
             #         self.log_operation(f"Model results logged with {len(results)} result items", "info")
             # except Exception as e:
             #     self.logger.warning(f"Error extracting results keys: {e}")
-            
+
             # Skip Elasticsearch if connection issues
             if self.connection_error or self.es is None:
                 return
-            
-            
+
             doc = self.format_log_entry({"input_info": input_info, "results": results, **kwargs})
             action = {"_index": f"{self.index_prefix}_results", "_source": doc}
             self.batch["results"].append(action)
@@ -646,10 +658,12 @@ class ElasticsearchLogger(BaseDBLogger):
                 # Clear batches without sending if connection error
                 for batch_type in self.batch:
                     if self.batch[batch_type]:
-                        self.logger.warning(f"Cannot flush {len(self.batch[batch_type])} {batch_type} logs: connection error")
+                        self.logger.warning(
+                            f"Cannot flush {len(self.batch[batch_type])} {batch_type} logs: connection error"
+                        )
                         self.batch[batch_type] = []
                 return
-                
+
             # Flush each batch type
             for batch_type in self.batch:
                 self._flush_batch(batch_type)
@@ -692,211 +706,130 @@ class ElasticsearchLogger(BaseDBLogger):
         return {
             "timestamp": datetime.now().isoformat(),
             "logger_name": self.name,
-            "tag_name": self.unique_name, 
+            "tag_name": self.unique_name,
             **self.context,
             **base_data,
             **additional_data,
         }
 
 
-# class LoggerFactory:
-#     """
-#     Factory class for creating logger instances.
-#     """
-#     VALID_LOGGER_HANDLERS = VALID_LOGGER_HANDLERS
-#     _emergency_logger = None
+def create_logger(logger_type="console", config=settings) -> BaseDBLogger:
+    """
+    Creates a logger of the specified type (elasticsearch or console).
     
-#     @staticmethod
-#     def _get_emergency_logger() -> DefaultLogger:
-#         """
-#         Get an emergency logger that should always work.
-        
-#         Returns
-#         -------
-#         DefaultLogger
-#             Emergency logger instance
-#         """
-#         if LoggerFactory._emergency_logger is None:
-#             # Create minimal DefaultLogger with hardcoded configuration
-#             logger = DefaultLogger(name="emergency_logger", tag=None)
-#             LoggerFactory._emergency_logger = logger
-            
-#         return LoggerFactory._emergency_logger
+    Parameters
+    ----------
+    logger_type : str, optional
+        Logger type ('elasticsearch' or 'console'), by default "console"
+    config : dict, optional
+        Additional logger configuration parameters, by default None
     
-#     @staticmethod
-#     def create_logger(handler_type: str = None, name: str = None, 
-#                      tag: str = None, **kwargs) -> Union[BaseDBLogger, logging.Logger]:
-#         """
-#         Create a logger based on the specified handler type.
+    Returns
+    -------
+    BaseDBLogger
+        Created logger object
+    """
+   
+    
+    # Default values
+    name = "ml_api"
+    tag = getattr(settings, "project_version", "v1.0")
+    log_level = getattr(settings, "log_level", "INFO")
+    emergency_logger = None
+
+
+    try:
+        emergency_logger = DefaultLogger(name=f"{name}_emergency", log_level="DEBUG")
+    except Exception as e:
+        print(f"Emergency logger setup failed: {e}")
         
-#         Parameters
-#         ----------
-#         handler_type : str, optional
-#             Type of logger (file, mongodb, elasticsearch, composite), by default None
-#         name : str, optional
-#             Logger name, by default None
-#         tag : str, optional
-#             Model version or tag, by default None
-#         **kwargs : dict
-#             Additional logger-specific parameters
-            
-#         Returns
-#         -------
-#         Union[BaseDBLogger, logging.Logger]
-#             A configured logger instance
-#         """
-#         try:
-#             # Use settings handler type if not specified
-#             handler = handler_type or settings.logger_settings.handler
-#             name = name or settings.logger_settings.name
-            
-#             # Geçersiz handler kontrolü
-#             if handler.lower() not in LoggerFactory.VALID_LOGGER_HANDLERS:
-#                 # Hatayı logla ve varsayılana geri dön
-#                 emergency_logger = LoggerFactory._get_emergency_logger()
-#                 emergency_logger.error(f"Geçersiz logger tipi: {handler}, varsayılan console logger kullanılıyor")
-#                 return LoggerFactory._create_console_logger(
-#                     name=name or "fallback_logger"
-#                 )
-            
-#             if handler.lower() in ["mongodb", "elasticsearch", "composite"]:
-#                 # For DB loggers, we need a name
-#                 if not name:
-#                     name = "default_db_logger"
-#                     emergency_logger = LoggerFactory._get_emergency_logger()
-#                     emergency_logger.warning(f"DB logger için isim belirtilmemiş, '{name}' kullanılıyor")
-                
-#                 # Use app version as tag if not provided
-#                 if not tag and hasattr(settings, 'app_version'):
-#                     tag = settings.app_version
+
+    try:
+
+        # Process configuration parameters
+        
+        name = config.logger_name
+        log_level = config.log_level
+        logger_type = logger_type or config.logger_handler
+        
+        # Check if logger type is valid
+        if logger_type not in VALID_LOGGER_HANDLERS:
+            if emergency_logger:
+                emergency_logger.warning(f"Logger type '{logger_type}' not supported. Using 'console' instead.")
+            logger_type = "console"
+
+        # Create the relevant logger
+        if logger_type == "elasticsearch":
+            # Safely check Elasticsearch connection settings
+            es_user = settings.elasticsearch_user
+            es_password = settings.elasticsearch_password
+            es_host = settings.elasticsearch_host
+            es_port = settings.elasticsearch_port
+            batch_size = settings.batch_size
+
+        
+         # Test Elasticsearch connection
+            try:
+                from elasticsearch import Elasticsearch
+                es = Elasticsearch([f"{es_host}:{es_port}"], timeout=5)
+                if not es.ping():
+                    if emergency_logger:
+                        emergency_logger.warning("Elasticsearch connection test failed. Falling back to console logger.")
+                    return DefaultLogger(name=name, tag=tag, log_level=log_level)
                     
-#                 return LoggerFactory._create_db_logger(
-#                     name=name, 
-#                     tag=tag, 
-#                     log_type=handler, 
-#                     **kwargs
-#                 )
-#             elif handler.lower() == "file":
-#                 return LoggerFactory._create_file_logger(
-#                     name=name or "default_file_logger",
-#                     tag=tag, 
-#                     log_dir=kwargs.get('log_dir')
-#                 )
-#             else:  # "console" veya diğer durumlar için
-#                 return LoggerFactory._create_console_logger(
-#                     name=name or "default_console_logger"
-#                 )
-#         except Exception as e:
-#             # Herhangi bir hata olursa, acil durum logger'ını dön
-#             emergency_logger = LoggerFactory._get_emergency_logger()
-#             emergency_logger.error(f"Logger oluşturulurken hata: {e}", exc_info=True)
-#             return emergency_logger
-    
-#     @staticmethod
-#     def _create_db_logger(name: str, tag: str = None, 
-#                          log_type: str = None, **kwargs) -> Union[BaseDBLogger, Dict[str, BaseDBLogger], logging.Logger]:
-#         """
-#         Create a database logger based on configuration.
+                return ElasticsearchLogger(
+                    name=name,
+                    tag=tag,
+                    es_hosts=[f"{es_host}:{es_port}"],
+                    batch_size=batch_size,
+                    log_level=log_level)
+                
+            except (ImportError, Exception) as e:
+                if emergency_logger:
+                    emergency_logger.error(f"Elasticsearch logger initialization failed: {e}")
+                    return DefaultLogger(name=name, tag=tag, log_level=log_level)
 
-#         Parameters
-#         ----------
-#         name : str
-#             Logger name
-#         tag : str, optional
-#             Model version/tag for tracking, by default None
-#         log_type : str, optional
-#             Type of logger (mongodb, elasticsearch, or from settings), by default None
-#         **kwargs : dict
-#             Additional logger-specific parameters
+        # Default/Console logger (fallback)
+        else:
+            return DefaultLogger(name=name, tag=tag, log_level=log_level)
+        
 
-#         Returns
-#         -------
-#         Union[BaseDBLogger, Dict[str, BaseDBLogger], logging.Logger]
-#             A configured database logger instance or dictionary of loggers
-#         """
-#         try:
-#             # Determine logger type from settings if not specified
-#             logger_type = log_type or settings.logger_settings.handler
+    except Exception as e:
+        # If everything fails
+        if emergency_logger:
+            emergency_logger.error(f"Logger creation failed: {e}")
+            return emergency_logger
+        else:
+            # Simplest logger as last resort
+            fallback_logger = logging.getLogger("fallback")
+            fallback_logger.setLevel(logging.INFO)
+            if not fallback_logger.handlers:
+                handler = logging.StreamHandler()
+                fallback_logger.addHandler(handler)
+            fallback_logger.error(f"Critical error in logger creation: {e}")
+            
+            # Try DefaultLogger as last resort
+            try:
+                return DefaultLogger(name="fallback", log_level="INFO")
+            except:
+                # At this point, the best we can do is return a working logger
+                class MinimalLogger(BaseDBLogger):
+                    def __init__(self): 
+                        self.logger = fallback_logger
+                    def _setup_logger(self): return self.logger
+                    def log_operation(self, message, level="info", **kwargs): self.logger.info(message)
+                    def log_metadata(self, metadata): pass
+                    def log_model_results(self, input_info, results, **kwargs): pass
+                    def info(self, message, **kwargs): self.logger.info(message)
+                    def warning(self, message, **kwargs): self.logger.warning(message)
+                    def error(self, message, **kwargs): self.logger.error(message)
+                    def debug(self, message, **kwargs): self.logger.debug(message)
+                    def flush_all(self): pass
+                
+                return MinimalLogger()
+            
 
-#             if logger_type.lower() == "mongodb":
-#                 return MongoDBLogger(name, tag, **kwargs)
-#             elif logger_type.lower() == "elasticsearch":
-#                 return ElasticsearchLogger(name, tag, **kwargs)
-#             elif logger_type.lower() == "composite":
-#                 # When using composite, we'll return both loggers as a dictionary
-#                 # The application code needs to handle this case
-#                 return {
-#                     "mongodb": MongoDBLogger(name, tag, **kwargs),
-#                     "elasticsearch": ElasticsearchLogger(name, tag, **kwargs),
-#                     # Bağlantı hatası durumlarında yedek olarak
-#                     "file": FileLogger(name, tag, **kwargs)
-#                 }
-#             else:
-#                 # Default to FileLogger
-#                 return FileLogger(name, tag, **kwargs)
-#         except Exception as e:
-#             # Herhangi bir hata olursa fallback olarak console logger dön
-#             emergency_logger = LoggerFactory._get_emergency_logger()
-#             emergency_logger.error(f"DB logger oluşturulurken hata: {e}", exc_info=True)
-#             return emergency_logger
-    
-#     @staticmethod
-#     def _create_file_logger(name: str = None, tag: str = None, log_dir: str = None) -> Union[FileLogger, logging.Logger]:
-#         """
-#         Configure and return a file-based logger.
-
-#         Parameters
-#         ----------
-#         name : str, optional
-#             Logger name (defaults to settings.logger_name), by default None
-#         tag : str, optional
-#             Tag or version identifier, by default None
-#         log_dir : str, optional
-#             Directory for log files (defaults to settings.log_dir), by default None
-
-#         Returns
-#         -------
-#         Union[FileLogger, logging.Logger]
-#             Configured logger instance
-#         """
-#         try:
-#             return FileLogger(name, tag, log_dir)
-#         except Exception as e:
-#             # Dosya logger'ı oluşturulamazsa console'a dön
-#             emergency_logger = LoggerFactory._get_emergency_logger()
-#             emergency_logger.error(f"File logger oluşturulurken hata: {e}", exc_info=True)
-#             return emergency_logger
-
-#     @staticmethod
-#     def _create_console_logger(name: str = None, log_level: str = None) -> DefaultLogger:
-#         """
-#         Configure and return a console-based logger.
-
-#         Parameters
-#         ----------
-#         name : str, optional
-#             Logger name (defaults to settings.logger_name), by default None
-#         log_level : str, optional
-#             Logging level (defaults to settings.log_level), by default None
-
-#         Returns
-#         -------
-#         DefaultLogger
-#             Configured default logger instance
-#         """
-#         try:
-#             name = name or settings.logger_name
-#             log_level = log_level or settings.log_levels
-#             return DefaultLogger(name=name, log_level=log_level)
-#         except Exception as e:
-#             # Use emergency logger as last resort
-#             emergency_logger = LoggerFactory._get_emergency_logger()
-#             emergency_logger.error(f"Console logger creation error: {e}", exc_info=True)
-#             # Create a basic DefaultLogger with minimum configuration
-#             return DefaultLogger(name="emergency_logger", tag=None)
-    
-
-logger = DefaultLogger(name="ml_api", log_level="INFO")
+logger = create_logger(settings.logger_type, settings)
 
 # Create default application logger with fallback
 # try:
@@ -904,14 +837,14 @@ logger = DefaultLogger(name="ml_api", log_level="INFO")
 #     logger.info("Default logger initialized")
 # except Exception as e:
 #     print(f"Default logger creation error: {e}")
-#     #  emergency_logger 
+#     #  emergency_logger
 #     logger = LoggerFactory._get_emergency_logger()
-    
+
 # # Backward compatibility functions
 # def create_file_logger(name: str = None, tag: str = None, log_dir: str = None) -> FileLogger:
 #     """
 #     Backward compatibility function for file logger creation.
-    
+
 #     Parameters
 #     ----------
 #     name : str, optional
@@ -920,7 +853,7 @@ logger = DefaultLogger(name="ml_api", log_level="INFO")
 #         Tag or version identifier, by default None
 #     log_dir : str, optional
 #         Directory for log files, by default None
-        
+
 #     Returns
 #     -------
 #     FileLogger

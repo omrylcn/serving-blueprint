@@ -42,10 +42,12 @@ class APPSettings(BaseSettings):
     flower_password: str = Field(default="guest")
 
     # Logger Configuration
+    logger_name: str = Field(default="ml_api")
     log_level: str = Field(default="INFO")
     logger_handler: str = Field(default="file")
     log_dir: str = Field(default="logs")
     logger_format: str = Field(default="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    logger_type : str = Field(default="console", description="Type of logger to use, ")
 
     sensitive_fields: List[str] = Field(
         default=["password", "key", "token", "secret"],
