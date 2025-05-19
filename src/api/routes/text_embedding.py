@@ -14,6 +14,8 @@ from src.api.schemas.embedding import (
     #TaskResultResponse
 )
 
+from src.api.schemas.task import TaskStatusResponse, TaskResultResponse
+
 from src.workers.text_embedding_workers import TextEmbeddingWorkerService,create_celery_app
 
 router = APIRouter()
@@ -32,7 +34,7 @@ async def get_available_models():
     """
     models = []
 
-    for key,model_name in settings.ML_MODELS['text_embedding'].items():
+    for key,model_name in settings.ml_models['text_embedding'].items():
         ml_cfg = ml_settings.models[model_name]
         models.append(
             ModelInfoResponse(
@@ -55,17 +57,18 @@ async def create_embedding(
     Create embeddings for a single text using the specified model.
     """
     # Validate model name
-    if request.model_key not in settings.ML_MODELS['text_embedding'].keys():
+    if request.model_key not in settings.ml_models['text_embedding'].keys():
         raise HTTPException(
             status_code=400,
-            detail=f"Model '{request.model_key}' not available. Use one of: {settings.ML_MODELS['text_embedding']}"
+            detail=f"Model '{request.model_key}' not available. Use one of: {settings.ml_models['text_embedding']}"
         )
     
     # Send text to embedding task
-    model_name = settings.ML_MODELS['text_embedding'][request.model_key]
+    model_name = settings.ml_models['text_embedding'][request.model_key]
     model_key = request.model_key
 
-    print(settings.model_dump())
+    # print(settings.model_dump())
+    
     try:
         result = text_embedding_worker_service.send_as_task(
             texts=[request.text],
@@ -82,7 +85,7 @@ async def create_embedding(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/{task_id}")
+@router.get("/{task_id}",response_model=TaskResultResponse)
 async def get_task_result(
     task_id: str
 ):
@@ -91,9 +94,9 @@ async def get_task_result(
     """
     try:
         result = text_embedding_worker_service.get_task_result(task_id)
-        print(type(result))
-        print(result.keys())
-        return True
+        # print(type(result))
+        # print(result.keys())
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving task result: {str(e)}")
 
